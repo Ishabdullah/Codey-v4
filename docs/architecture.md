@@ -2,7 +2,7 @@
 
 ## Three-Model Design
 
-Codey-v2 runs three purpose-built models simultaneously, each on its own port:
+Codey-v4 runs three purpose-built models simultaneously, each on its own port:
 
 | Model | Port | Role |
 |-------|------|------|
@@ -108,10 +108,10 @@ This table covers exactly what Codey saves, where it lives, and how long it last
 |------|-------|------------------|----------|--------------|
 | Last 6 turns of conversation | `~/.codey_sessions/<project-hash>.json` | Yes | After 2 hours of inactivity | `/clear` in-chat or `codey2 --clear-session` |
 | Project memory (`CODEY.md`) | `<project>/CODEY.md` | Yes | Never | Edit or delete the file manually |
-| Action log (every tool call) | `~/.codey-v2/state.db` | Yes | Never (append-only) | Delete `~/.codey-v2/state.db` |
+| Action log (every tool call) | `~/.codey-v4/state.db` | Yes | Never (append-only) | Delete `~/.codey-v4/state.db` |
 | Open files / working context | In-memory only | No | On exit | — |
 | File undo history | In-memory only | No | On exit | — |
-| Knowledge base embeddings | `~/.codey-v2/kb/` (if set up) | Yes | Never | `codey2 kb clear` |
+| Knowledge base embeddings | `~/.codey-v4/kb/` (if set up) | Yes | Never | `codey2 kb clear` |
 
 ### What Codey does NOT do
 
@@ -130,7 +130,7 @@ This table covers exactly what Codey saves, where it lives, and how long it last
 ## Project Structure
 
 ```
-~/codey-v2/
+~/codey-v4/
 ├── codey2                   # CLI client
 ├── codeyd2                  # Daemon manager
 ├── main.py                  # Entry point

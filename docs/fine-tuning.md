@@ -1,6 +1,6 @@
 # Fine-tuning
 
-Codey-v2 supports personalizing the underlying model using your own interaction history. Heavy training runs off-device on Google Colab (free tier), while your phone handles only lightweight data export and model file management.
+Codey-v4 supports personalizing the underlying model using your own interaction history. Heavy training runs off-device on Google Colab (free tier), while your phone handles only lightweight data export and model file management.
 
 ---
 
@@ -47,7 +47,7 @@ Training uses [Unsloth](https://github.com/unslothai/unsloth) for 2x speed and 7
 # Extract the downloaded adapter
 unzip codey-lora-adapter.zip
 
-# Import to Codey-v2
+# Import to Codey-v4
 codey2 --import-lora /path/to/codey-lora-adapter --lora-model primary
 ```
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Inference engine for Codey-v2 (v2.6.0 — ChatML fix).
+Inference engine for Codey-v4 (v2.6.0 — ChatML fix).
 
 Uses llama-server's /v1/chat/completions endpoint which automatically applies
 the model's chat template. Previous versions sent raw text to /completion,
@@ -67,7 +67,7 @@ def infer(messages: list[dict], stream: bool = False, extra_stop: list = None,
         messages: Chat messages [{"role": "system"/"user"/"assistant", "content": "..."}]
         stream: Enable streaming (reserved for future use)
         extra_stop: Additional stop sequences
-        model: Ignored (single-model mode — always uses primary 7B)
+        model: Ignored (single-model mode — always uses Bonsai-8B)
         show_thinking: Show thinking indicator
         use_hybrid: Use chat completions backend (default True)
         max_tokens: Override max tokens (default: MODEL_CONFIG["max_tokens"])

@@ -2,7 +2,7 @@ import os
 import shutil
 from pathlib import Path
 
-CODEY_DIR = Path(os.environ.get("CODEY_DIR", Path.home() / "codey-v2"))
+CODEY_DIR = Path(os.environ.get("CODEY_DIR", Path.home() / "codey-v4"))
 MODEL_PATH = Path(os.environ.get(
     "CODEY_MODEL",
     Path.home() / "models" / "qwen2.5-coder-7b" / "qwen2.5-coder-7b-instruct-q4_k_m.gguf"
@@ -10,7 +10,7 @@ MODEL_PATH = Path(os.environ.get(
 
 # Dedicated embedding model — Option C (v2.6.6)
 # nomic-embed-text-v1.5: 80 MB Q4, 2048 ctx, 768-dim vectors.
-# Runs on port 8082, separate from the 7B generation server on 8080.
+# Runs on port 8082, separate from the primary generation server on 8080.
 # ~50 ms/chunk, covers 92.6% of chunks; rest use BM25 keyword fallback.
 EMBED_MODEL_PATH = Path(os.environ.get(
     "CODEY_EMBED_MODEL",
@@ -25,15 +25,18 @@ LLAMA_LIB = os.environ.get("CODEY_LLAMA_LIB") or str(_HOME_LLAMA)
 
 MODEL_CONFIG = {
     "n_ctx":          32768,
-    "n_threads":      4,
-    "n_gpu_layers":   0,
+    "n_threads":      5,
+    "n_gpu_layers":   1,
+    "no_kv_offload":  True,
+    "flash_attn":     False,
     "verbose":        False,
     "temperature":    0.7,
     "max_tokens":     2048,
     "repeat_penalty": 1.1,
     "top_p":          0.8,
     "top_k":          20,
-    "batch_size":     1024,
+    "batch_size":     512,
+    "ubatch_size":    256,
     "kv_type":        "q4_0",
     # Stop the model before it can role-play the next user turn.
     # With /v1/chat/completions, llama-server handles ChatML stop tokens
@@ -121,7 +124,7 @@ RETRIEVAL_CONFIG = {
 }
 
 CODEY_VERSION = "2.0.0"
-CODEY_NAME    = "CODEY-V2"
+CODEY_NAME    = "CODEY-V4"
 
 # ── OpenRouter backend (optional) ────────────────────────────────────────────
 # ── Remote backend selection ─────────────────────────────────────────────────
@@ -172,20 +175,20 @@ UNLIMITEDCLAUDE_BASE_URL      = os.environ.get("UNLIMITEDCLAUDE_BASE_URL", "http
 
 # ── 0.5B planner/summarizer (port 8081) ───────────────────────────────────────
 # Qwen2.5-0.5B runs as a dedicated planning + summarization model on port 8081,
-# entirely separate from the 7B agent server on port 8080.
+# entirely separate from the primary agent server on port 8080.
 PLANNER_MODEL_PATH = Path(os.environ.get(
     "CODEY_PLANNER_MODEL",
     Path.home() / "models" / "qwen2.5-0.5b" / "planner-codey.gguf"
 ))
 PLANND_SERVER_PORT = int(os.environ.get("CODEY_PLANND_PORT", "8081"))
 
-# ── 7B model memory-mapping settings — Change 2 ─────────────────────────────
-# QWEN_7B_MMAP=True  → weights are mmap'd from disk; only touched pages load into RAM.
-# QWEN_7B_MLOCK=False → OS can page weights out under memory pressure (default).
-# These settings apply ONLY to the Qwen 7B model.
+# ── Primary model memory-mapping settings ────────────────────────────────────
+# MODEL_MMAP=True  → weights are mmap'd from disk; only touched pages load into RAM.
+# MODEL_MLOCK=False → OS can page weights out under memory pressure (default).
+# These settings apply ONLY to the primary model (Bonsai-8B).
 # The 0.5B summarizer model is unaffected.
-QWEN_7B_MMAP  = os.environ.get("CODEY_7B_MMAP",  "1") != "0"   # default: True
-QWEN_7B_MLOCK = os.environ.get("CODEY_7B_MLOCK", "0") != "0"   # default: False
+MODEL_MMAP  = os.environ.get("CODEY_MODEL_MMAP",  os.environ.get("CODEY_7B_MMAP",  "1")) != "0"   # default: True
+MODEL_MLOCK = os.environ.get("CODEY_MODEL_MLOCK", os.environ.get("CODEY_7B_MLOCK", "0")) != "0"   # default: False
 
 # ── Planner settings ─────────────────────────────────────────────────────────
 # Temperature 0.2 keeps plans focused; 768 gives room for 5 detailed steps.

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Daemon core for Codey-v2.
+Daemon core for Codey-v4.
 
 Main daemon process with:
 - Unix socket server for CLI communication
@@ -32,13 +32,13 @@ from core.task_executor import TaskExecutor
 
 # Daemon directory — defined at module level so check_pid_file / is_daemon_running
 # can use it without triggering a full Daemon init.
-DAEMON_DIR = Path.home() / ".codey-v2"
+DAEMON_DIR = Path.home() / ".codey-v4"
 
 # Stable path constants with hardcoded defaults.
 # These may be overridden when Daemon.__init__ reads the config file.
-PID_FILE    = DAEMON_DIR / "codey-v2.pid"
-SOCKET_FILE = DAEMON_DIR / "codey-v2.sock"
-LOG_FILE    = DAEMON_DIR / "codey-v2.log"
+PID_FILE    = DAEMON_DIR / "codey-v4.pid"
+SOCKET_FILE = DAEMON_DIR / "codey-v4.sock"
+LOG_FILE    = DAEMON_DIR / "codey-v4.log"
 
 
 # ==================== PID File Management ====================
@@ -115,7 +115,7 @@ class DaemonServer:
         """Handle a user command (prompt).
 
         The 0.5B model on port 8081 plans the task into numbered steps.
-        Each step is added as a dependent task so the 7B agent works through
+        Each step is added as a dependent task so the Bonsai-8B agent works through
         them one at a time.
 
         If the planner is unavailable, times out, or returns fewer than 2 steps,
@@ -386,8 +386,8 @@ class Daemon:
         setup_file_logging(log_file_path)
 
         # Override path constants from config so all other functions see them.
-        PID_FILE    = Path(self._config.get("daemon", "pid_file",    default=str(DAEMON_DIR / "codey-v2.pid")))
-        SOCKET_FILE = Path(self._config.get("daemon", "socket_file", default=str(DAEMON_DIR / "codey-v2.sock")))
+        PID_FILE    = Path(self._config.get("daemon", "pid_file",    default=str(DAEMON_DIR / "codey-v4.pid")))
+        SOCKET_FILE = Path(self._config.get("daemon", "socket_file", default=str(DAEMON_DIR / "codey-v4.sock")))
         LOG_FILE    = Path(log_file_path)
 
         self.state = get_state_store()
@@ -422,7 +422,7 @@ class Daemon:
                     info(f"ProjectMemory: loaded {_codeymd_path}")
 
             # Load config.json if it exists
-            _config_path = _Path.home() / ".codey-v2" / "config.json"
+            _config_path = _Path.home() / ".codey-v4" / "config.json"
             if _config_path.exists():
                 _config_content = _config_path.read_text(encoding="utf-8", errors="replace")
                 _mem.add_to_project(str(_config_path), _config_content, is_protected=True)
@@ -462,7 +462,7 @@ class Daemon:
         # claimed and executed twice.  All task dispatch goes through
         # _process_planner_tasks, which uses try_claim_task() for atomic claiming.
 
-        # Pre-load 7B model (llama-server on port 8080) so it's ready for CLI
+        # Pre-load Bonsai-8B (llama-server on port 8080) so it's ready for CLI
         # Skip when using a remote backend — no local server needed
         from utils.config import CODEY_BACKEND as _backend, is_remote_backend as _is_remote
         if not _is_remote():
@@ -470,13 +470,13 @@ class Daemon:
                 from core.loader_v2 import get_loader
                 loader = get_loader()
                 if loader.ensure_model():
-                    info("7B model pre-loaded (port 8080)")
+                    info("Bonsai-8B pre-loaded (port 8080)")
                 else:
-                    warning("7B model pre-load failed — will load on first request")
+                    warning("Bonsai-8B pre-load failed — will load on first request")
             except Exception as _e:
-                warning(f"7B model pre-load skipped: {_e}")
+                warning(f"Bonsai-8B pre-load skipped: {_e}")
         else:
-            info(f"Backend: {_backend} — skipping local 7B and 0.5B server startup")
+            info(f"Backend: {_backend} — skipping local Bonsai-8B and 0.5B server startup")
 
         # Start dedicated embedding server (nomic-embed on port 8082)
         try:
@@ -509,13 +509,13 @@ class Daemon:
                 _watchdog_ticks += 1
                 if _watchdog_ticks >= 60:
                     _watchdog_ticks = 0
-                    # 7B model server watchdog (local only)
+                    # Bonsai-8B server watchdog (local only)
                     if not _is_remote():
                         try:
                             from core.loader_v2 import get_loader
                             _loader = get_loader()
                             if not _loader.get_loaded_model():
-                                warning("7B model server died — restarting...")
+                                warning("Bonsai-8B server died — restarting...")
                                 _loader.load_primary()
                         except Exception:
                             pass

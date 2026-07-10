@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Model loader for Codey-v2 - Termux/Android compatible.
+Model loader for Codey-v4 - Termux/Android compatible.
 
 Uses llama-server binary via subprocess instead of llama-cpp-python bindings
 (since llama-cpp-python doesn't support Android platform).
 
-Single-model architecture: always loads the primary 7B model.
+Single-model architecture: always loads the primary model (Bonsai-8B).
 """
 
 import subprocess
@@ -64,42 +64,48 @@ class LlamaServer:
                 "--port", str(self.port),
                 "-c", str(MODEL_CONFIG["n_ctx"]),
                 "-t", str(MODEL_CONFIG["n_threads"]),
+                "-ngl", str(MODEL_CONFIG["n_gpu_layers"]),
+                "-np", "1",
+                "--batch-size", str(MODEL_CONFIG["batch_size"]),
+                "--ubatch-size", str(MODEL_CONFIG["ubatch_size"]),
                 "--temp", str(MODEL_CONFIG["temperature"]),
                 "--top-p", str(MODEL_CONFIG["top_p"]),
                 "--top-k", str(MODEL_CONFIG["top_k"]),
                 "--repeat-penalty", str(MODEL_CONFIG["repeat_penalty"]),
                 "--n-predict", str(MODEL_CONFIG["max_tokens"]),
-                "--flash-attn", "on",  # fused attention kernel, faster prefill
-                "--embedding",       # enable /v1/embeddings endpoint for hybrid KB search
-                "--pooling", "mean", # mean pooling → single vector per input (OAI-compatible)
+                # Note: embeddings handled by dedicated nomic-embed server on port 8082
             ]
+            if MODEL_CONFIG.get("no_kv_offload"):
+                cmd.append("--no-kv-offload")
+            if MODEL_CONFIG.get("flash_attn", True):
+                cmd.extend(["--flash-attn", "on"])
 
             # Add stop tokens (using --reverse-prompt)
             for stop in MODEL_CONFIG.get("stop", []):
                 cmd.extend(["--reverse-prompt", stop])
 
-            # ── mmap / mlock settings for the 7B model (Change 2) ──────────
+            # ── mmap / mlock settings for the primary model ─────────────────
             # Pass --mmap / --no-mmap explicitly in both directions so the flag
             # is visible in ps output and not left to llama.cpp's default.
             # --no-mlock does NOT exist in this llama.cpp build; omitting --mlock
             # is sufficient to keep mlock disabled (the llama.cpp default).
             try:
-                from utils.config import QWEN_7B_MMAP, QWEN_7B_MLOCK
-                if QWEN_7B_MMAP:
+                from utils.config import MODEL_MMAP, MODEL_MLOCK
+                if MODEL_MMAP:
                     cmd.append("--mmap")
                 else:
                     cmd.append("--no-mmap")
-                if QWEN_7B_MLOCK:
+                if MODEL_MLOCK:
                     cmd.append("--mlock")
                 info(
-                    f"7B model: mmap={'enabled' if QWEN_7B_MMAP else 'disabled'}, "
-                    f"mlock={'enabled' if QWEN_7B_MLOCK else 'disabled'}"
+                    f"Bonsai-8B: mmap={'enabled' if MODEL_MMAP else 'disabled'}, "
+                    f"mlock={'enabled' if MODEL_MLOCK else 'disabled'}"
                 )
             except ImportError:
                 pass  # Config not available — use llama.cpp defaults (mmap on, mlock off)
 
             # Start process - redirect output to log file to avoid pipe buffer issues
-            log_file = Path.home() / ".codey-v2" / "llama-server.log"
+            log_file = Path.home() / ".codey-v4" / "llama-server.log"
             log_file.parent.mkdir(parents=True, exist_ok=True)
 
             with open(log_file, "w") as f:
@@ -109,11 +115,14 @@ class LlamaServer:
             # Open log file for appending stdout/stderr
             log_fd = open(log_file, "a")
 
+            _env = os.environ.copy()
+            _env["GGML_VK_DISABLE"] = "1"
             self.process = subprocess.Popen(
                 cmd,
                 stdout=log_fd,
                 stderr=subprocess.STDOUT,
                 preexec_fn=os.setsid if os.name != 'nt' else None,
+                env=_env,
             )
 
             info(f"llama-server PID: {self.process.pid}, logging to {log_file}")
@@ -297,7 +306,7 @@ class ModelLoader:
     """
     Manages model loading via llama-server.
 
-    Single-model: always loads the primary 7B Qwen2.5-Coder model.
+    Single-model: always loads the primary model (Bonsai-8B).
     """
 
     def __init__(self):
@@ -307,7 +316,7 @@ class ModelLoader:
         self._load_failures: int = 0
 
     def load_primary(self) -> bool:
-        """Load the primary (7B) model."""
+        """Load the primary model (Bonsai-8B)."""
         try:
             info(f"Loading model: {MODEL_PATH.name}")
 

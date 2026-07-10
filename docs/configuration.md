@@ -2,16 +2,16 @@
 
 ## Daemon Config
 
-Default location: `~/.codey-v2/config.json`
+Default location: `~/.codey-v4/config.json`
 
 Generate with: `codeyd2 config`
 
 ```json
 {
   "daemon": {
-    "pid_file":    "~/.codey-v2/codey-v2.pid",
-    "socket_file": "~/.codey-v2/codey-v2.sock",
-    "log_file":    "~/.codey-v2/codey-v2.log",
+    "pid_file":    "~/.codey-v4/codey-v4.pid",
+    "socket_file": "~/.codey-v4/codey-v4.sock",
+    "log_file":    "~/.codey-v4/codey-v4.log",
     "log_level":   "INFO"
   },
   "tasks": {
@@ -25,7 +25,7 @@ Generate with: `codeyd2 config`
     "stuck_task_threshold":  1800
   },
   "state": {
-    "db_path":                    "~/.codey-v2/state.db",
+    "db_path":                    "~/.codey-v4/state.db",
     "cleanup_old_actions_hours":  24
   }
 }
@@ -120,7 +120,7 @@ RECURSIVE_CONFIG = {
 ```python
 RETRIEVAL_CONFIG = {
     "enabled":            True,
-    "kb_path":            "~/codey-v2/knowledge",
+    "kb_path":            "~/codey-v4/knowledge",
     "semantic_search":    True,
     "max_chunks":         4,
     "budget_chars":       2400,    # ~600 tokens of retrieved content per call
@@ -156,7 +156,7 @@ Any model path or port can be overridden without editing `config.py`:
 | `CODEY_EMBED_PORT` | `8082` | |
 | `CODEY_PLANND_PORT` | `8081` | |
 | `CODEY_LLAMA_SERVER` | Auto-detected from PATH or `~/llama.cpp/build/bin/llama-server` | |
-| `CODEY_7B_MMAP` | `1` (enabled) | |
-| `CODEY_7B_MLOCK` | `0` (disabled) | |
+| `CODEY_MODEL_MMAP` | `1` (enabled) | |
+| `CODEY_MODEL_MLOCK` | `0` (disabled) | |
 | `CODEY_BACKEND` | `local` | Coder backend: `local`, `openrouter`, `unlimitedclaude` |
 | `CODEY_BACKEND_P` | `local` | Planner backend (independent of coder backend) |

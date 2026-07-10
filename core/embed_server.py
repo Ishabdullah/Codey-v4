@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Dedicated embedding server for Codey-v2 knowledge base indexing.
+Dedicated embedding server for Codey-v4 knowledge base indexing.
 
 Runs nomic-embed-text-v1.5 (80 MB Q4, 2048 ctx, 768-dim) as a separate
 llama-server on port 8082 — distinct from the generation server on 8080/8081.
@@ -83,25 +83,29 @@ class EmbedServer:
             "--host", _HOST,
             "--port", str(self.port),
             "-c", "2048",        # 2k ctx — fast for 92% of chunks; rest use BM25 fallback
-            "-t", "2",           # 2 threads for embedding (keep CPU headroom for 7B)
+            "-t", "1",
+            "-ngl", "1",
             "-b", "2048",        # logical batch size matches ctx
             "--ubatch-size", "2048",  # physical batch matches ctx
             "--embedding",      # enable /v1/embeddings endpoint
             "--pooling", "mean",# OAI-compatible single vector per input
         ]
 
-        log_file = Path.home() / ".codey-v2" / "embed-server.log"
+        log_file = Path.home() / ".codey-v4" / "embed-server.log"
         log_file.parent.mkdir(parents=True, exist_ok=True)
 
         log_fd = open(log_file, "a")
         log_fd.write(f"\n--- embed server start: {' '.join(cmd)}\n")
         log_fd.flush()
 
+        _env = os.environ.copy()
+        _env["GGML_VK_DISABLE"] = "1"
         self.process = subprocess.Popen(
             cmd,
             stdout=log_fd,
             stderr=subprocess.STDOUT,
             preexec_fn=os.setsid if os.name != "nt" else None,
+            env=_env,
         )
 
         info(f"Embed server PID: {self.process.pid}, log: {log_file}")

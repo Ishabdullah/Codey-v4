@@ -9,7 +9,7 @@
 | `codeyd2 status` | Show daemon status, uptime, and model state |
 | `codeyd2 restart` | Restart all daemons |
 | `codeyd2 reload` | Send hot-reload signal (SIGUSR1) without downtime |
-| `codeyd2 config` | Write a default config file to `~/.codey-v2/config.json` |
+| `codeyd2 config` | Write a default config file to `~/.codey-v4/config.json` |
 
 ---
 

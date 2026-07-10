@@ -1,6 +1,6 @@
 # Security
 
-Codey-v2 is a persistent, autonomous coding agent that runs as a background daemon, executes shell commands, maintains long-term memory, and loads local LLMs. These capabilities make it powerful but introduce non-trivial risks compared to a simple chat tool.
+Codey-v4 is a persistent, autonomous coding agent that runs as a background daemon, executes shell commands, maintains long-term memory, and loads local LLMs. These capabilities make it powerful but introduce non-trivial risks compared to a simple chat tool.
 
 **This is early-stage open-source software. Use with caution on devices with sensitive data. Always review generated code and commands before execution.**
 
@@ -10,7 +10,7 @@ Codey-v2 is a persistent, autonomous coding agent that runs as a background daem
 
 ### 1. Persistent Daemon
 
-The daemon runs continuously with a Unix socket (`~/.codey-v2/codey-v2.sock`) for IPC.
+The daemon runs continuously with a Unix socket (`~/.codey-v4/codey-v4.sock`) for IPC.
 
 **Risk:** If the socket has permissive permissions or is in a shared location, unauthorized local processes could send commands.
 
@@ -57,7 +57,7 @@ Opt-in feature that allows the agent to patch its own code and files.
 
 ### 4. Memory and State Persistence
 
-Hierarchical memory stored in SQLite (`~/.codey-v2/`).
+Hierarchical memory stored in SQLite (`~/.codey-v4/`).
 
 **Risk:** Sensitive code snippets or personal data could be stored and leaked if the device is compromised or backups are mishandled.
 

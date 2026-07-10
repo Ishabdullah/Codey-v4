@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# Codey-v2 — Full Installation Script
+# Codey-v4 — Full Installation Script
 #
-# Installs everything needed to run Codey-v2 on Termux (Android) or Linux:
+# Installs everything needed to run Codey-v4 on Termux (Android) or Linux:
 #   • System packages (pkg / apt / dnf / pacman)
 #   • Python dependencies
 #   • llama.cpp (built from source)
@@ -29,7 +29,7 @@ BOLD='\033[1m'
 NC='\033[0m'
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
-CODEY_V2_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CODEY_V4_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LLAMA_CPP_DIR="$HOME/llama.cpp"
 MODELS_DIR="$HOME/models"
 PRIMARY_MODEL_DIR="$MODELS_DIR/qwen2.5-coder-7b"
@@ -107,7 +107,7 @@ install_python_deps() {
         pip3 install --upgrade pip
     fi
 
-    cd "$CODEY_V2_DIR"
+    cd "$CODEY_V4_DIR"
 
     # Install only what's needed for the core agent + GUI
     # (pipeline/training deps are optional — see requirements.txt for full list)
@@ -122,7 +122,7 @@ install_python_deps() {
         "filelock>=3.13.0" \
         "tqdm>=4.65.0" \
         "hnswlib>=0.7.0" \
-        || print_warning "Some pip packages failed — Codey-v2 may still work"
+        || print_warning "Some pip packages failed — Codey-v4 may still work"
 
     print_success "Core Python packages installed"
 
@@ -132,7 +132,7 @@ install_python_deps() {
         read -p "  Install pipeline/training extras? (large download, optional) [y/N] " -n 1 -r
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
-            pip3 install -r "$CODEY_V2_DIR/requirements.txt" \
+            pip3 install -r "$CODEY_V4_DIR/requirements.txt" \
                 || print_warning "Some pipeline packages may have failed (normal on Termux)"
         fi
     fi
@@ -269,16 +269,16 @@ download_models() {
 # ── 6. Executables & PATH ─────────────────────────────────────────────────────
 make_executable() {
     print_step "Permissions"
-    chmod +x "$CODEY_V2_DIR/codey2"
-    chmod +x "$CODEY_V2_DIR/codeyd2"
-    chmod +x "$CODEY_V2_DIR/install.sh"
-    [ -f "$CODEY_V2_DIR/gui/start.sh" ] && chmod +x "$CODEY_V2_DIR/gui/start.sh"
+    chmod +x "$CODEY_V4_DIR/codey4"
+    chmod +x "$CODEY_V4_DIR/codeyd4"
+    chmod +x "$CODEY_V4_DIR/install.sh"
+    [ -f "$CODEY_V4_DIR/gui/start.sh" ] && chmod +x "$CODEY_V4_DIR/gui/start.sh"
     print_success "Executable bits set"
 }
 
 setup_daemon_dir() {
-    mkdir -p "$HOME/.codey-v2"
-    print_success "Daemon directory: $HOME/.codey-v2"
+    mkdir -p "$HOME/.codey-v4"
+    print_success "Daemon directory: $HOME/.codey-v4"
 }
 
 setup_path() {
@@ -290,18 +290,18 @@ setup_path() {
         SHELL_CONFIG="$HOME/.bashrc"
     fi
 
-    if grep -q "codey-v2" "$SHELL_CONFIG" 2>/dev/null; then
+    if grep -q "codey-v4" "$SHELL_CONFIG" 2>/dev/null; then
         print_status "PATH already configured in $SHELL_CONFIG"
     else
         {
             echo ""
-            echo "# Codey-v2"
-            echo "export PATH=\"$CODEY_V2_DIR:\$PATH\""
+            echo "# Codey-v4"
+            echo "export PATH=\"$CODEY_V4_DIR:\$PATH\""
         } >> "$SHELL_CONFIG"
-        print_success "Added $CODEY_V2_DIR to PATH in $SHELL_CONFIG"
+        print_success "Added $CODEY_V4_DIR to PATH in $SHELL_CONFIG"
     fi
 
-    export PATH="$CODEY_V2_DIR:$PATH"
+    export PATH="$CODEY_V4_DIR:$PATH"
     # shellcheck source=/dev/null
     source "$SHELL_CONFIG" 2>/dev/null || true
 }
@@ -330,8 +330,8 @@ verify_installation() {
         && print_success "Embedding model: ready" \
         || print_warning "Embedding model: missing"
 
-    command -v codey2  &>/dev/null && print_success "codey2:  in PATH"  || print_warning "codey2:  not in PATH yet (restart terminal)"
-    command -v codeyd2 &>/dev/null && print_success "codeyd2: in PATH"  || print_warning "codeyd2: not in PATH yet (restart terminal)"
+    command -v codey4  &>/dev/null && print_success "codey4:  in PATH"  || print_warning "codey4:  not in PATH yet (restart terminal)"
+    command -v codeyd4 &>/dev/null && print_success "codeyd4: in PATH"  || print_warning "codeyd4: not in PATH yet (restart terminal)"
 }
 
 # ── 8. Completion message ─────────────────────────────────────────────────────
@@ -339,20 +339,20 @@ print_completion() {
     echo
     echo -e "${GREEN}${BOLD}"
     echo "╔══════════════════════════════════════════════════════════════╗"
-    echo "║            CODEY-V2 — Installation Complete                  ║"
+    echo "║            CODEY-V4 — Installation Complete                  ║"
     echo "╚══════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
 
     echo -e "${CYAN}${BOLD}QUICK START${NC}"
     echo
     echo -e "  Reload shell:   ${BLUE}source $SHELL_CONFIG${NC}"
-    echo -e "  Start daemon:   ${BLUE}codeyd2 start${NC}"
-    echo -e "  Run Codey:      ${BLUE}codey2${NC}"
+    echo -e "  Start daemon:   ${BLUE}codeyd4 start${NC}"
+    echo -e "  Run Codey:      ${BLUE}codey4${NC}"
     echo -e "    → opens the interactive TUI ${BOLD}and${NC} the browser GUI automatically"
     echo -e "    → browser:    ${BLUE}http://localhost:8888${NC}"
     echo
-    echo -e "  Stop daemon:    ${BLUE}codeyd2 stop${NC}"
-    echo -e "  Daemon status:  ${BLUE}codeyd2 status${NC}"
+    echo -e "  Stop daemon:    ${BLUE}codeyd4 stop${NC}"
+    echo -e "  Daemon status:  ${BLUE}codeyd4 status${NC}"
     echo
 
     echo -e "${CYAN}${BOLD}BACKEND SWITCHING  (local models are the default — no key needed)${NC}"
@@ -420,7 +420,7 @@ main() {
 
     echo -e "${BLUE}${BOLD}"
     echo "╔══════════════════════════════════════════════════════════════╗"
-    echo "║           Codey-v2 Installation Script                       ║"
+    echo "║           Codey-v4 Installation Script                       ║"
     echo "║   Persistent local AI coding agent for Termux / Android      ║"
     echo "╚══════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"

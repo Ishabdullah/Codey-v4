@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-LoRA adapter import and merge for Codey-v2.
+LoRA adapter import and merge for Codey-v4.
 
 Handles:
 - Importing LoRA adapters trained with Unsloth
@@ -482,10 +482,10 @@ def import_lora_adapter(
         # Full merge on-device (requires llama.cpp, lots of RAM)
         if model_variant == "primary":
             base_model = str(MODEL_PATH)
-            output_name = "codey-v2-finetuned-7b.gguf"
+            output_name = "codey-v4-finetuned-7b.gguf"
         else:
             base_model = str(SECONDARY_MODEL_PATH)
-            output_name = "codey-v2-finetuned-1.5b.gguf"
+            output_name = "codey-v4-finetuned-1.5b.gguf"
         
         output_path = Path.home() / "models" / "codey-finetuned" / output_name
         output_path.parent.mkdir(parents=True, exist_ok=True)

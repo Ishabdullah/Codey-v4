@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Direct filesystem access for Codey-v2.
+Direct filesystem access for Codey-v4.
 
 Provides a class-based interface for file operations:
 - read(path) - Read file content
@@ -30,7 +30,7 @@ class FilesystemAccessError(Exception):
 
 class Filesystem:
     """
-    Direct filesystem access for Codey-v2 agent.
+    Direct filesystem access for Codey-v4 agent.
 
     Provides safe file operations with:
     - Path validation (no access outside workspace)

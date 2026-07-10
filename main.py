@@ -11,6 +11,7 @@ from core.inference_v2 import infer, was_last_streamed
 from core.agent import run_agent
 from core import context as ctx
 from core.sysmon import get_monitor
+from core.orchestrator import is_conversational
 
 BANNER = f"""[bold blue]
   ██████╗ ██████╗ ██████╗ ███████╗██╗   ██╗
@@ -18,13 +19,13 @@ BANNER = f"""[bold blue]
  ██║     ██║   ██║██║  ██║█████╗   ╚████╔╝
  ██║     ██║   ██║██║  ██║██╔══╝    ╚██╔╝
  ╚██████╗╚██████╔╝██████╔╝███████╗   ██║
-  ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝   ╚═╝  ─ V2
+  ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝   ╚═╝  ─ V4
 [/bold blue][dim]  v{CODEY_VERSION} · Local AI Coding Assistant · Termux[/dim]
 """
 
 def parse_args():
     import argparse
-    parser = argparse.ArgumentParser(description="Codey-v2 - Local AI coding assistant")
+    parser = argparse.ArgumentParser(description="Codey-v4 - Local AI coding assistant")
     parser.add_argument("prompt",       nargs="?")
     parser.add_argument("--yolo",       action="store_true", help="Skip confirmations")
     parser.add_argument("--threads",    type=int)
@@ -205,6 +206,13 @@ def _run_with_plan(prompt: str, history: list, yolo: bool, use_plan: bool, no_pl
     if not no_plan and _is_solo_peer:
         return run_agent(prompt, history, yolo=yolo, use_plan=use_plan, no_plan=no_plan)
     # Multi-peer or multi-step peer prompts fall through to plannd below
+
+    # ── Conversational gate ──────────────────────────────────────────────────
+    # Simple questions / chit-chat should NOT trigger planning. Route them
+    # straight to run_agent() with no_plan=True so they get a direct response
+    # from the primary model instead of a multi-step plan.
+    if is_conversational(prompt):
+        return run_agent(prompt, history, yolo=yolo, no_plan=True)
 
     plan = _try_daemon_plan(prompt, no_plan)
 
@@ -819,7 +827,7 @@ def handle_command(user_input: str, history: list, yolo: bool = False) -> tuple[
                     )
                     if response and not response.startswith("["):
                         separator()
-                        console.print(f"\n[bold green]Codey-v2:[/bold green] {response}")
+                        console.print(f"\n[bold green]Codey-v4:[/bold green] {response}")
                         separator()
                     from core.sessions import save_session
                     save_session(history)
@@ -847,7 +855,7 @@ def handle_command(user_input: str, history: list, yolo: bool = False) -> tuple[
                     response, history = run_agent(text, history, yolo=yolo)
                     if response and not response.startswith("["):
                         separator()
-                        console.print(f"\n[bold green]Codey-v2:[/bold green] {response}")
+                        console.print(f"\n[bold green]Codey-v4:[/bold green] {response}")
                         separator()
                         if v.enabled and v.tts_available():
                             try:
@@ -996,7 +1004,7 @@ def handle_command(user_input: str, history: list, yolo: bool = False) -> tuple[
   /unread <file>         Remove file from context
   /ignore <pattern>      Add pattern to .codeyignore
   /context               Show loaded files and sizes
-  /diff [file]           Show what Codey-v2 changed (colored diff)
+  /diff [file]           Show what Codey-v4 changed (colored diff)
   /undo [file]           Restore file to previous version
 
 [bold]Code Review (v2.5.2):[/bold]
@@ -1047,20 +1055,20 @@ def handle_command(user_input: str, history: list, yolo: bool = False) -> tuple[
   /peer <task>           Auto-pick best CLI for the task
 
 [bold]CLI flags:[/bold]
-  codey-v2 "task"              One-shot
-  codey-v2 --chat "task"       Chat with prefilled prompt
-  codey-v2 --yolo "task"       Skip all confirmations
-  codey-v2 --fix file.py       Run file, auto-fix any errors
-  codey-v2 --read file.py      Pre-load file into context
-  codey-v2 --init              Generate CODEY.md and exit
-  codey-v2 --no-resume         Start fresh (ignore saved session)
-  codey-v2 --allow-self-mod    Enable self-modification (with checkpoints)
-  codey-v2 --no-peer          Disable peer CLI escalation
+  codey-v4 "task"              One-shot
+  codey-v4 --chat "task"       Chat with prefilled prompt
+  codey-v4 --yolo "task"       Skip all confirmations
+  codey-v4 --fix file.py       Run file, auto-fix any errors
+  codey-v4 --read file.py      Pre-load file into context
+  codey-v4 --init              Generate CODEY.md and exit
+  codey-v4 --no-resume         Start fresh (ignore saved session)
+  codey-v4 --allow-self-mod    Enable self-modification (with checkpoints)
+  codey-v4 --no-peer          Disable peer CLI escalation
 
 [bold]Fine-tuning (v2.3.0):[/bold]
-  codey-v2 --finetune          Export fine-tuning dataset + Colab notebook
-  codey-v2 --finetune --ft-days 30 --ft-quality 0.7 --ft-model both
-  codey-v2 --import-lora /path/to/adapter --lora-model primary
+  codey-v4 --finetune          Export fine-tuning dataset + Colab notebook
+  codey-v4 --finetune --ft-days 30 --ft-quality 0.7 --ft-model both
+  codey-v4 --import-lora /path/to/adapter --lora-model primary
 
 [bold]Environment variables:[/bold]
   ALLOW_SELF_MOD=1             Enable self-modification (alternative to flag)
@@ -1117,7 +1125,7 @@ def repl(initial_prompt=None, yolo=False, one_shot=False, preload=None, plan=Fal
                     separator()
                 else:
                     separator()
-                    console.print(f"\n[bold green]Codey-v2:[/bold green] {response}")
+                    console.print(f"\n[bold green]Codey-v4:[/bold green] {response}")
                     separator()
             save_session(history)
         except KeyboardInterrupt:
@@ -1138,7 +1146,7 @@ def repl(initial_prompt=None, yolo=False, one_shot=False, preload=None, plan=Fal
                     separator()
                 else:
                     separator()
-                    console.print(f"\n[bold green]Codey-v2:[/bold green] {response}")
+                    console.print(f"\n[bold green]Codey-v4:[/bold green] {response}")
                     separator()
             save_session(history)
         except KeyboardInterrupt:
@@ -1210,7 +1218,7 @@ def repl(initial_prompt=None, yolo=False, one_shot=False, preload=None, plan=Fal
                     separator()
                 else:
                     separator()
-                    console.print(f"\n[bold green]Codey-v2:[/bold green] {response}")
+                    console.print(f"\n[bold green]Codey-v4:[/bold green] {response}")
                     separator()
                 # Speak the response if voice mode is on (Ctrl+C to interrupt)
                 try:
@@ -1241,7 +1249,7 @@ def main():
     args = parse_args()
 
     if args.version:
-        print(f"Codey-v2 v{CODEY_VERSION}")
+        print(f"Codey-v4 v{CODEY_VERSION}")
         sys.exit(0)
 
     apply_overrides(args)
@@ -1252,7 +1260,7 @@ def main():
         if check_pid_file():
             error("Daemon is already running. Use --daemon-stop to shut it down.")
             sys.exit(1)
-        info("Starting Codey-v2 daemon mode...")
+        info("Starting Codey-v4 daemon mode...")
         daemon = Daemon()
         daemon.run()
         return
@@ -1278,7 +1286,7 @@ def main():
             # Suggest test file name
             from pathlib import Path as _P
             suggested = "test_" + _P(args.tdd).name
-            error(f"No test file found. Create {suggested} or use: codey-v2 --tdd {args.tdd} --tests {suggested}")
+            error(f"No test file found. Create {suggested} or use: codey-v4 --tdd {args.tdd} --tests {suggested}")
             shutdown()
             return
         run_tdd_loop(args.tdd, test_file, yolo=args.yolo)

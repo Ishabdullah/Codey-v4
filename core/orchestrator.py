@@ -45,6 +45,72 @@ CONVERSATIONAL_PATTERNS = [
     "what's the difference", "how to use", "how do you",
 ]
 
+
+def is_conversational(message: str) -> bool:
+    """
+    Detect if a message is a conversational question/request vs a task to execute.
+
+    Returns True for:
+    - Questions (ending with ?)
+    - Question starters (what, why, how, when, where, who, which, is, are, do, does, etc.)
+    - QA phrases (tell me, explain, help me understand, etc.)
+    - Conversational patterns (how do i, what is, can you explain, etc.)
+    - Very short messages (< 10 chars)
+
+    Returns False for:
+    - Task-oriented messages with action keywords
+    - Messages longer than 50 chars that aren't conversational
+    - Messages with complexity signals
+
+    Used by main._run_with_plan() to skip planning for simple conversations.
+    """
+    import re
+    msg = message.lower().strip()
+    if not msg:
+        return True
+
+    # Very short messages are conversational
+    if len(msg) < 10:
+        return True
+
+    # Action keywords that indicate a task (not a question)
+    _action_kws = [
+        "create", "write", "make", "build", "edit", "fix", "run", "execute",
+        "install", "add", "delete", "remove", "update", "patch", "refactor",
+        "implement", "generate", "rewrite", "deploy", "setup", "configure",
+        "review", "analyze", "audit", "examine", "inspect", "assess",
+        "read", "look at", "show me", "check",
+        "replace", "rename", "swap", "convert", "change", "append", "insert",
+        "move", "copy", "print", "output", "display", "open",
+        "ask gemini", "ask claude", "call gemini", "call claude",
+    ]
+    _has_action = any(re.search(r'\b' + re.escape(k) + r'\b', msg) for k in _action_kws)
+
+    # Question indicators
+    _question_starters = (
+        "what", "why", "how", "when", "where", "who", "which",
+        "is ", "are ", "do ", "does ", "can ", "could ", "would ",
+        "should ", "will ", "was ", "were ", "has ", "have ",
+    )
+    _qa_phrases = [
+        "tell me", "tell me about", "explain", "help me understand",
+        "what can you", "hello", "hi", "hey", "thanks", "thank you",
+    ]
+
+    # If no action keyword AND looks like a question, it's conversational
+    if not _has_action and (
+        msg.endswith("?") or
+        msg.startswith(_question_starters) or
+        any(re.search(r'\b' + re.escape(k) + r'\b', msg) for k in _qa_phrases)
+    ):
+        return True
+
+    # Check for conversational patterns (even with action keywords)
+    if any(pattern in msg for pattern in CONVERSATIONAL_PATTERNS):
+        return True
+
+    return False
+
 def is_complex(message):
     """
     Heuristic: does this need multiple steps?

@@ -1,4 +1,4 @@
-# Codey-v2 — TODO & Status
+# Codey-v4 — TODO & Status
 
 **Last updated:** 2026-04-01
 **Current version:** v2.0.0
@@ -69,7 +69,7 @@ to implement exactly what Gemini planned. Run every
 feature to verify it works. Write a README.md for it.
 Then initialize a git repo in codey-test if one does
 not exist and commit everything with the message:
-codey-v2.7.0 final validation tests.
+codey-v4.7.0 final validation tests.
 ```
 
 **Expected plan from plannd (ideal):**
@@ -78,7 +78,7 @@ codey-v2.7.0 final validation tests.
 2. Ask Qwen to implement exactly what Gemini planned
 3. Run: python budget.py (feature verification)
 4. Write README.md for budget.py
-5. Run: git init && git add . && git commit -m "codey-v2.7.0 final validation tests"
+5. Run: git init && git add . && git commit -m "codey-v4.7.0 final validation tests"
 ```
 
 **What should happen now (v2.7.2):**

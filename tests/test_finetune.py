@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Tests for Codey-v2 fine-tuning workflow.
+Tests for Codey-v4 fine-tuning workflow.
 
 Tests:
 - Dataset curation

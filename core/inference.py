@@ -11,7 +11,7 @@ from pathlib import Path
 from utils.config import MODEL_CONFIG, MODEL_PATH, LLAMA_SERVER_BIN, LLAMA_LIB
 from utils.logger import error, info
 
-SERVER_URL       = "http://127.0.0.1:8080"  # 7B primary server (port 8081 = plannd)
+SERVER_URL       = "http://127.0.0.1:8080"  # Bonsai-8B primary server (port 8081 = plannd)
 CHAT_URL         = f"{SERVER_URL}/v1/chat/completions"
 HEALTH_URL       = f"{SERVER_URL}/health"
 
@@ -21,6 +21,7 @@ def _get_env():
     env = os.environ.copy()
     ld = env.get("LD_LIBRARY_PATH", "")
     env["LD_LIBRARY_PATH"] = f"{LLAMA_LIB}:{ld}" if ld else LLAMA_LIB
+    env["GGML_VK_DISABLE"] = "1"
     return env
 
 def _server_ready(retries=90, delay=1.0) -> bool:
@@ -58,15 +59,18 @@ def _start_server():
         "--model",        str(MODEL_PATH),
         "--ctx-size",     str(cfg["n_ctx"]),
         "--threads",      str(cfg["n_threads"]),
+        "-ngl",           str(cfg.get("n_gpu_layers", 0)),
+        "-np",            "1",
         "--batch-size",   str(cfg["batch_size"]),
         "--cache-type-k", cfg["kv_type"],
         "--cache-type-v", cfg["kv_type"],
-        "--flash-attn", "on",  # fused attention kernel, 10-20% faster prefill
         "--port",         "8080",  # was 8081 — collided with plannd/summarizer
         "--log-disable",
     ]
+    if cfg.get("no_kv_offload"):
+        cmd.append("--no-kv-offload")
 
-    info(f"Starting llama-server (ctx={cfg['n_ctx']}, threads={cfg['n_threads']}, batch={cfg['batch_size']}, kv={cfg['kv_type']}, fa=on)...")
+    info(f"Starting llama-server (ctx={cfg['n_ctx']}, threads={cfg['n_threads']}, ngl={cfg.get('n_gpu_layers',0)}, batch={cfg['batch_size']}, kv={cfg['kv_type']})...")
     _server_proc = subprocess.Popen(
         cmd,
         stdout=subprocess.DEVNULL,
