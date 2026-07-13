@@ -12,6 +12,7 @@ from core.agent import run_agent
 from core import context as ctx
 from core.sysmon import get_monitor
 from core.orchestrator import is_conversational
+from core.kernel import Kernel
 
 BANNER = f"""[bold blue]
   ██████╗ ██████╗ ██████╗ ███████╗██╗   ██╗
@@ -1091,7 +1092,7 @@ def repl(initial_prompt=None, yolo=False, one_shot=False, preload=None, plan=Fal
     from utils.config import is_remote_backend
     if not is_remote_backend():
         loader = get_loader()
-        loader.load_primary()
+        kernel.model_management("load_primary")
 
     from core.project import detect_project
     from core.codeymd import find_codeymd
@@ -1115,6 +1116,10 @@ def repl(initial_prompt=None, yolo=False, one_shot=False, preload=None, plan=Fal
             history = load_session(path=session_path)
         else:
             history = load_session()  # auto-resume from cwd-based session file
+
+    # Initialize Kernel as the single entry point for future expansion
+    # (Currently a pass-through layer that delegates to existing architecture)
+    kernel = Kernel()
 
     if initial_prompt and one_shot:
         try:
@@ -1272,14 +1277,14 @@ def main():
 
     if args.init:
         loader = get_loader()
-        loader.load_primary()
+        kernel.model_management("load_primary")
         run_init()
         shutdown()
         return
 
     if args.tdd:
         loader = get_loader()
-        loader.load_primary()
+        kernel.model_management("load_primary")
         from core.tdd import run_tdd_loop, find_test_file
         test_file = args.tests or find_test_file(args.tdd)
         if not test_file:
@@ -1295,7 +1300,7 @@ def main():
 
     if args.fix:
         loader = get_loader()
-        loader.load_primary()
+        kernel.model_management("load_primary")
         from core.fixmode import fix_file
         # --fix is automated, always disable confirmations
         from utils import config

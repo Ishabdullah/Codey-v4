@@ -68,6 +68,10 @@ README.md.bak*
 install.log
 install_background.log
 
+# ── Agent tooling / internal dirs ────────────────────────────────────────────
+.qwen/
+audit/
+
 # ── Secrets ───────────────────────────────────────────────────────────────────
 *.key
 *.pem
